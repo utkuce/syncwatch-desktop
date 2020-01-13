@@ -125,7 +125,7 @@ void construct_interface(SDL_Window *window)
             ImGui::EndTooltip();
         }
         ImGui::SameLine();
-        ImGui::Text(std::string((torrent_progress != 1.0f ? "from " : "to ") + std::string(torrent_peers) + " peers").c_str());
+        ImGui::Text(std::string((torrent_progress != 1.0f ? "from " + std::string(torrent_peers) + " peers" : "")).c_str());
 
         ImGui::ProgressBar(torrent_progress, ImVec2(0.0f, 0.0f));
         ImGui::SameLine();
