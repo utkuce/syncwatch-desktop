@@ -110,8 +110,9 @@ void construct_interface(SDL_Window *window)
         }
 
         ImGui::SameLine();
-        HelpMarker("Enter a magnet link or a video url (youtube etc.)\n\
-            A complete list of supported sources can be found on\nhttps://ytdl-org.github.io/youtube-dl/supportedsites.html");
+        std::string help_marker = "Enter a magnet link or a video url (youtube etc.)\n";
+        help_marker += "A complete list of supported sources can be found on\nhttps://ytdl-org.github.io/youtube-dl/supportedsites.html";
+        HelpMarker(help_marker.c_str());
 
         ImGui::Text(torrent_progress != 1.0f ? "Downloading" : "Seeding");
         ImGui::SameLine();
@@ -159,20 +160,6 @@ void construct_interface(SDL_Window *window)
 
         ImGui::Begin("Media Controls", 0, ImGuiWindowFlags_NoTitleBar);
 
-        if (ImGui::Button("Play/Pause"))
-        {
-            mpv_play_pause();
-        }
-
-        ImGui::SameLine(0, 10);
-
-        if (ImGui::Button("Rewind 10s"))
-        {
-            mpv_seek("-10", "relative");
-        }
-
-        ImGui::SameLine(0, 10);
-
         char slider_display[99], position_display[99], duration_display[99];
         seconds_to_display(position, position_display);
         seconds_to_display(duration, duration_display);
@@ -190,7 +177,7 @@ void construct_interface(SDL_Window *window)
             if (ImGui::IsItemDeactivatedAfterEdit)
                 slider_position = position;
         }
-
+/*
         ImGui::SetNextItemWidth(100);
         if (ImGui::SliderInt("Volume", &volume, 0, 100))
         {
@@ -199,23 +186,32 @@ void construct_interface(SDL_Window *window)
         ImGui::SameLine(0, 10);
 
         static bool mute;
-        ImGui::Checkbox("Mute", &mute);
+        if (ImGui::Checkbox("Mute", &mute))
+        {
+            const char *cmd[] = {"mute", mute ? "yes" : "no", NULL};
+        }
 
         ImGui::SameLine(0, 10);
+*/
+        if (ImGui::Button("Play/Pause"))
+        {
+            mpv_play_pause();
+        }
 
+        ImGui::SameLine(0, 10);
         if (ImGui::Button("Fullscreen"))
         {
             toggle_fullscreen(window);
         }
 
         ImGui::SameLine(0, 10);
-        ImGui::SetNextItemWidth(150);
-        static int subtitle_selection = 0;
-        ImGui::Combo("Subtitles", &subtitle_selection, "None\0Subtitle1\0Subtitle2\0\0", 10);
-        ImGui::SameLine(0, 10);
+        //ImGui::SetNextItemWidth(150);
+        //static int subtitle_selection = 0;
+        //ImGui::Combo("Subtitles", &subtitle_selection, "None\0Subtitle1\0Subtitle2\0\0", 10);
+        //ImGui::SameLine(0, 10);
         ImGui::Checkbox("Show Info Panel", &show_info_panel);
-        ImGui::SameLine(0, 10);
-        ImGui::Text("%.1f FPS", ImGui::GetIO().Framerate);
+        //ImGui::SameLine(0, 10);
+        //ImGui::Text("%.1f FPS", ImGui::GetIO().Framerate);
 
         ImGui::End();
     }
