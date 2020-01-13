@@ -36,7 +36,7 @@ export function createRoom() {
     console.log("Creating room");
     console.log("Join link: " + roomLink);
 
-    //videoplayer.setRoomInfo(roomLink);
+    videoplayer.setRoomInfo(roomLink);
     
     remotePeer.on('signal', (data: string) => {
 
@@ -182,16 +182,11 @@ function handleReceived(data: string) {
 }
 
 var peersList = []
-export var connectedDisplay = "None";
 function setNewPeer(peerInfo: string | null) {
 
     if (peerInfo != null ) {
 
-        if (connectedDisplay === "None")
-            connectedDisplay = "";
-
         peersList.push(peerInfo);
-        connectedDisplay += peerInfo + "\n";
-
+        videoplayer.setNewPeer(peerInfo);
     }
 }

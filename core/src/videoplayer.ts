@@ -1,25 +1,25 @@
 
 const mpvAPI = require('node-mpv');
 const mpvPlayer = new mpvAPI({
-  binary: "mpv.exe"
-//  binary: './gui/bin/syncwatchUI.exe',
-//  socket: "\\\\.\\pipe\\syncwatch-socket",
-//  ipc_command: "--input-ipc-server", // prevents the --version call and ui exe hanging
+//  binary: "mpv.exe"
+  binary: '../gui/bin/syncwatchUI.exe',
+  socket: "\\\\.\\pipe\\syncwatch-socket",
+  ipc_command: "--input-ipc-server", // prevents the --version call and ui exe hanging
 });
-/*
-exports.setTorrentInfo = function(name, progress, speed, time, peers) {
+
+export function setTorrentInfo(name: string, progress: string, speed: string, time: string, peers: string) {
   mpvPlayer.command("script-message", [
     "torrentInfo", String(name), String(progress), String(speed), String(time), String(peers)]);
 }
 
-exports.setRoomInfo = function(roomLink) {
+export function setRoomInfo(roomLink: string) {
   mpvPlayer.command("script-message", ["roomLink", String(roomLink)]);
 }
 
-exports.setNewPeer = function(peerId, peerName) {
-  mpvPlayer.command("script-message", ["newPeer", String(peerId), String(peerName)]);
+export function setNewPeer(peerInfo: string) {
+  mpvPlayer.command("script-message", ["newPeer", String(peerInfo)]);
 }
-*/
+
 
 var firstStart = true;
 mpvPlayer.on('started', function() {

@@ -44,12 +44,26 @@ export function start(magnetURI: string) {
 
           //console.log(downloadInfo);
           videoplayer.setTitle(downloadInfo);
+
+          videoplayer.setTorrentInfo(
+            torrent.name,
+            torrent.progress,
+            (torrent.downloadSpeed / Math.pow(10,6)).toFixed(2)  + " mb/s ",
+            ETA,
+            torrent.numPeers );
       
         }, 200); // every 200 ms
       
         torrent.on("done", function () {
             
           downloadInfo = torrent.name + " (Download complete)";
+
+          videoplayer.setTorrentInfo(
+            torrent.name,
+            "1.0",
+            (torrent.downloadSpeed / Math.pow(10,6)).toFixed(2)  + " mb/s ",
+            "0",
+            torrent.numPeers );
 
           console.log(downloadInfo);
           videoplayer.setTitle(downloadInfo);
