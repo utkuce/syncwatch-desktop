@@ -1,13 +1,26 @@
 {
-    "name": "syncwatch",
-    "author": "Utku Çelik",
-    "bin": "index.js",
-    "dependencies": {
-        "firebase": "^7.5.0",
-        "get-port": "^5.1.0",
-        "node-mpv": "^1.4.3",
-        "simple-peer": "^9.6.2",
-        "uniqid": "^5.2.0",
-        "webtorrent-hybrid": "^4.0.1"
-    }
+  "name": "syncwatch-desktop",
+  "version": "0.4.3",
+  "main": "index.js",
+  "author": "Utku Çelik <utkuce@gmail.com>",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "build": "tsc && node build.js",
+    "start": "tsc && node ./dist/index.js"
+  },
+  "dependencies": {
+    "firebase": "^7.5.0",
+    "get-port": "^5.1.0",
+    "node-mpv": "^1.4.3",
+    "simple-peer": "^9.6.2",
+    "uniqid": "^5.2.0",
+    "video-extensions": "^1.1.0",
+    "webtorrent-hybrid": "^4.0.1"
+  },
+  "devDependencies": {
+    "cpy": "^8.0.0",
+    "pkg": "^4.4.0",
+    "typescript": "^3.7.4"
+  }
 }
