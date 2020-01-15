@@ -10,3 +10,4 @@ imgui.ini
 .vscode
 bin
 config.ts
+deploy/
