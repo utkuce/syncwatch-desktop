@@ -5,6 +5,8 @@ import 'firebase/database'
 import * as videoplayer from './videoplayer';
 import config from './config';
 
+import * as tui from './tui'
+
 // Initialize Firebase
 firebase.initializeApp(config.firebase);
 
@@ -12,11 +14,11 @@ var SimplePeer = require('simple-peer');
 var wrtc = require('wrtc');
 
 var remotePeer : any; // TODO: make it an array for one to many connection
-var connected : boolean = false;
+export var connected : boolean = false;
 
 var uniqid = require('uniqid');
 const myPeerId = uniqid('peer-');
-process.title = "Connecting as " + myPeerId;
+//process.title = "Connecting as " + myPeerId;
 
 export var roomLink: string = "not_set";
 export function createRoom() {
@@ -34,14 +36,13 @@ export function createRoom() {
 
     roomLink = "syncwatch://" + roomId;
  
-    console.log("Creating room");
-    console.log("Join link: " + roomLink);
+    tui.addDebugInfo("Creating room, please wait...");
 
     //videoplayer.setRoomInfo(roomLink);
     
     remotePeer.on('signal', (data: string) => {
 
-        //console.log('SIGNAL', JSON.stringify(data));
+        //tui.addDebugInfo('SIGNAL', JSON.stringify(data));
     
         // add yourself to the room with your signaling data
         firebase.database().ref(roomId + "/" + myPeerId).push(data, 
@@ -51,7 +52,12 @@ export function createRoom() {
                     console.error(error)
                     return
                 }
-                console.log('Room added to firebase database')
+                
+                tui.addDebugInfo('Room added to firebase database');
+                
+                tui.setRoomLink(roomLink);
+                tui.addDebugInfo("Join link: " + roomLink);
+
                 setNewPeer(myPeerId + " (you)");
             }
         );
@@ -68,13 +74,13 @@ export function createRoom() {
             remotePeer.send(JSON.stringify({ "sourceURL": videoplayer.getCurrentSource()}));
         
         // wait for 'connect' event before using the data channel
-        console.log("Connected to peer");
+        tui.addDebugInfo("Connected to peer");
         //remotePeer.send('hey, how is it going?');
     });
 
     remotePeer.on('data', (data: string) => {
         // got a data channel message
-        console.log('got a message: ' + data);
+        tui.addDebugInfo('got a message: ' + data);
         handleReceived(data);
     });
 
@@ -85,9 +91,9 @@ export function join(roomId: string) {
 
     remotePeer = new SimplePeer({ wrtc: wrtc , trickle: false});
 
-    console.log("Joining room: " + roomId);
+    tui.addDebugInfo("Joining room: " + roomId);
     roomLink = "syncwatch://" + roomId;
-    console.log("Reading signal data of peers in the room");
+    tui.addDebugInfo("Reading signal data of peers in the room");
     
     // and add yourself to the room with your signaling data
     remotePeer.on('signal', (data: string) => {
@@ -102,7 +108,7 @@ export function join(roomId: string) {
                     console.error(error)
                     return
                 }
-                console.log('Own peer id added to firebase database')
+                tui.addDebugInfo('Own peer id added to firebase database')
                 setNewPeer(myPeerId + " (you)");
             }
         );
@@ -112,13 +118,13 @@ export function join(roomId: string) {
         
         connected = true;
         // wait for 'connect' event before using the data channel
-        console.log("Connected to peer");
+        tui.addDebugInfo("Connected to peer");
         //remotePeer.send('hey, how is it going?');
     });
 
     remotePeer.on('data', (data: string) => {
         // got a data channel message
-        console.log('got a message: ' + data);
+        tui.addDebugInfo('got a message: ' + data);
         handleReceived(data);
     });
 
@@ -132,24 +138,24 @@ function readPeerSignals(roomId: string) {
     roomRef.on("child_added", function(peer: any, prevChildKey: any) {
         
         
-        console.log("Child added for " + peer.key);
-        //console.log(peer.val());
+        tui.addDebugInfo("Child added for " + peer.key);
+        //tui.addDebugInfo(peer.val());
 
         // for each peer in the room get signaling data unless the peer is yourself
         if (peer.key !== myPeerId) {
 
-            //console.log(peer.val());
+            //tui.addDebugInfo(peer.val());
             // signaling data comes as json array
             peer.forEach(function(signalData: any) { 
-                console.log("Adding signaling data for " + peer.key);
-                //console.log(signalData.val() , "\n");
+                tui.addDebugInfo("Adding signaling data for " + peer.key);
+                //tui.addDebugInfo(signalData.val() , "\n");
                 remotePeer.signal(signalData.val()); 
 
                 setNewPeer(peer.key);
 
             });  
         } else {
-            console.log("Its own signal data, ignoring...");
+            tui.addDebugInfo("Its own signal data, ignoring...");
         }
 
     });
@@ -158,10 +164,10 @@ function readPeerSignals(roomId: string) {
 exports.sendData = function(data: string) {
 
     if (connected) {
-        console.log("Sending data: " + data);
+        tui.addDebugInfo("Sending data: " + data);
         remotePeer.send(data);
     } else {
-        console.log("Did not send sync data because peer is not connected");
+        tui.addDebugInfo("Did not send sync data because peer is not connected");
     }
 }
 
@@ -194,17 +200,6 @@ function handleReceived(data: string) {
     }
 }
 
-var peersList = []
-export var connectedDisplay = "None";
-function setNewPeer(peerInfo: string | null) {
-
-    if (peerInfo != null ) {
-
-        if (connectedDisplay === "None")
-            connectedDisplay = "";
-
-        peersList.push(peerInfo);
-        connectedDisplay += peerInfo + "\n";
-
-    }
+function setNewPeer(peerInfo: string) {
+    tui.addNewPeer(peerInfo);
 }
