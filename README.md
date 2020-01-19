@@ -1,6 +1,6 @@
 # syncwatch-desktop
 
-Syncs the position and pause state of a the video player between connected peers to watch videos together with friends. 
+Syncs the position and pause state of the video player between connected peers to watch videos together with friends. 
 Works with magnet links and starts playback instantly. Other supported video sources can be found 
 [here](http://ytdl-org.github.io/youtube-dl/supportedsites.html).
 Requires [mpv](https://mpv.io/) and optionally [youtube-dl](https://youtube-dl.org/) to be installed on the system. 
