@@ -1,5 +1,7 @@
 # syncwatch-desktop
 
+Complete rewrite of [syncwatch](https://github.com/utkuce/syncwatch) using peer to peer connections with support for video formats other than mp4 and webm, and bittorrent support rather than just webtorrent.
+
 Syncs the position and pause state of the video player between connected peers to watch videos together with friends. 
 Works with magnet links and starts playback instantly. Other supported video sources can be found 
 [here](http://ytdl-org.github.io/youtube-dl/supportedsites.html).
