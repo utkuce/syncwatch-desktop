@@ -1,17 +1,35 @@
 const WebTorrent = require('webtorrent-hybrid');
-var client = new WebTorrent();
-import * as videoplayer from './videoplayer'
-import * as tui from './tui'
+import * as videoplayer from '../desktop/videoplayer'
+import * as tui from '../desktop/tui'
 
 require('events').EventEmitter.defaultMaxListeners = 0;
 
 var streamPort: number;
 
 export var downloadInfo = "";
+var currentTorrent : any;
+
+var client = new WebTorrent();
+var interval : any;
 
 export function start(magnetURI: string) {
 
+    // remove last torrent
+    if (currentTorrent != undefined) {
+      console.log("Removing previous torrent: " + currentTorrent.name);
+      client.remove(currentTorrent, function(err: string){
+        if (err) 
+          console.log("Error removing torrent: " + err);
+        else 
+          console.log("Removing torrent successful");
+      });
+    }
+
+    // and add the new one
     client.add(magnetURI, function (torrent: any) {
+      
+      currentTorrent = torrent;
+      
       // create HTTP server for this torrent
       var server = torrent.createServer();
 
@@ -19,21 +37,22 @@ export function start(magnetURI: string) {
 
       (async () => {
         streamPort = await getPort();
-        tui.addDebugInfo("Starting http media server on port " + streamPort);
+        console.log("Starting http media server on port " + streamPort);
         server.listen(streamPort); // start the server listening to a port
 
-        tui.addDebugInfo("Searching torrent contents");
+        console.log("Searching torrent contents");
         torrent.files.forEach(function (file: any, index: number) {
-          //tui.addDebugInfo(file.name);
+          //console.log(file.name);
           var ext = file.name.substr(file.name.lastIndexOf('.') + 1);
           var videoExtensions = require('video-extensions');
           if (videoExtensions.includes(ext)) {
-            tui.addDebugInfo("Found video file at index " + index);
+            console.log("Found video file at index " + index);
             videoplayer.start("http://localhost:" + streamPort + "/" + index);
           }
         });
 
-        var interval = setInterval(function () {
+        clearInterval(interval);
+        interval = setInterval(function () {
 
           var ETA : string = (torrent.timeRemaining/60000).toFixed(2) + " minutes";
           if (torrent.timeRemaining < 60000) {
@@ -46,7 +65,7 @@ export function start(magnetURI: string) {
           + "\nTorrent peer(s): " + torrent.numPeers
           + "\nETA: " + ETA;
 
-          //videoplayer.setTitle(downloadInfo);
+          videoplayer.setTitle(torrent.name);
           tui.setTorrentInfo(downloadInfo);
       
         }, 200); // every 200 ms
@@ -54,15 +73,16 @@ export function start(magnetURI: string) {
         torrent.on("done", function () {
             
           downloadInfo = torrent.name + " (Download complete)";
-
-          tui.addDebugInfo(downloadInfo);
+          
+          tui.setTorrentInfo(downloadInfo);
+          console.log(downloadInfo);
           videoplayer.setTitle(downloadInfo);
 
           clearInterval(interval);
         });
       
         torrent.on('error', function (err: any) {
-            tui.addDebugInfo(err);
+            console.log(err);
         });
       
         // visit http://localhost:<port>/ to see a list of files
