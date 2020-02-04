@@ -1,4 +1,6 @@
 import * as tui from './tui'
+import * as room from '../core/room'
+import {isEqual} from 'lodash';
 
 const mpvAPI = require('node-mpv');
 const mpvPlayer = new mpvAPI();
@@ -7,39 +9,26 @@ var firstStart = true;
 mpvPlayer.on('started', function() {
 
   if (firstStart) {
-    mpvPlayer.pause();
+    setPause(true);
+    setPosition(0);
   }
   
 });
 
-var peers = require("../core/peers");
-
-function videoStateEquals(first: any, second: any) {
-  return first !== undefined && second != undefined && 
-    first["videoState"]["paused"] === second["videoState"]["paused"] &&
-    first["videoState"]["position"] === second["videoState"]["position"];
-}
-
-mpvPlayer.on('quit', function() {
-  console.log("Player quit");
-  process.exit();
-});
-
-var lastEventSent: Object;
-
+var lastEvent : any;
 mpvPlayer.on('paused', function() {
 
   if (!firstStart) { // dont send the first pause event
 
     mpvPlayer.getProperty("time-pos").then(function(value: number) {
 
-      console.log("video paused, position: " + value);
       var event = { "videoState": { "position": value, "paused": true } };
+      if (!isEqual(event, lastEvent)) { // prevent duplicate events
 
-      // dont send back received event and prevent duplicates
-      if (!videoStateEquals(event,lastReceivedEvent) && !videoStateEquals(event,lastEventSent)) {
-        peers.sendData(JSON.stringify(event));
-        lastEventSent = event;
+        lastEvent = event;
+        console.log("video paused, position: " + value);
+        room.sendData(event);
+
       }
 
     });
@@ -51,57 +40,40 @@ mpvPlayer.on('paused', function() {
 
 mpvPlayer.on('resumed', function() {
 
-
   mpvPlayer.getProperty("time-pos").then(function(value: number) {
       
-    console.log("video resumed, position: " + value);
     var event = { "videoState": { "position": value, "paused": false } };
+    if (!isEqual(event, lastEvent)) { // prevent duplicate events
 
-    // dont send back received event and prevent duplicates
-    if (!videoStateEquals(event,lastReceivedEvent) && !videoStateEquals(event,lastEventSent)) {
-      peers.sendData(JSON.stringify(event));
-      lastEventSent = event;
+      lastEvent = event;
+      console.log("video resumed, position: " + value);
+      room.sendData(event);
+
     }
-    
+
   });
 
 });
 
 mpvPlayer.on('seek', function(timeposition: any) {
 
-
   mpvPlayer.getProperty("pause").then(function(value: boolean) {
         
     console.log("video position changed: " + timeposition.end);
     var event = { "videoState": { "position": timeposition.end, "paused": value } };
-
-    // dont send back received event and prevent duplicates
-    if (!videoStateEquals(event,lastReceivedEvent) && !videoStateEquals(event,lastEventSent)) {
-      peers.sendData(JSON.stringify(event));
-      lastEventSent = event;
-    }
+    room.sendData(event);
       
   });
 
 });
 
 import * as torrenthandler from '../core/torrenthandler'
-var lastReceivedEvent: Object;
-var currentSource: string = "";
-
-export function setLastReceivedEvent(message: Object) {
-  lastReceivedEvent = message;
-};
-
-export function getCurrentSource() {
-  return currentSource;
-}
 
 export function start(url: string) {
 
   if (url.startsWith("magnet:")) {
 
-    console.log("Received magent link, forwarding to torrent handler");
+    console.log("Received magnet link, forwarding to torrent handler");
     torrenthandler.start(url);
 
   } else {
@@ -114,7 +86,7 @@ export function start(url: string) {
 
 export function setSource(sourceURL: string, sendToPeer: boolean = true) {
 
-  currentSource = sourceURL.trim();
+  var currentSource : string = sourceURL.trim();
   if (currentSource.startsWith("%HOMEPATH%") && process.env.HOMEPATH) {
     console.log("Expanding variable %HOMEPATH%");
     currentSource = currentSource.replace("%HOMEPATH%", process.env.HOMEPATH);
@@ -122,14 +94,8 @@ export function setSource(sourceURL: string, sendToPeer: boolean = true) {
 
   tui.setVideoSource(currentSource);
 
-  // send video url to peer
-  if (peers.connected) {
-    if (sendToPeer) {
-      peers.sendData(JSON.stringify({ "sourceURL": currentSource}));
-    }
-  }
-  else {
-    console.log("Did not send source url because peer is not connected");
+  if (sendToPeer) {
+    room.sendData({ "sourceURL": currentSource});
   }
 
   start(currentSource);
